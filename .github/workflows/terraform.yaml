@@ -100,8 +100,11 @@ jobs:
             source ~/.bash_profile
             tfenv install 1.9.5
             tfenv use 1.9.5
-            mkdir ~/terraform
-            git clone https://github.com/bhnd38
+            git clone --no-checkout https://github.com/bhnd38/Terraform-MR.git
+            cd Terraform-MR
+            git config core.sparseCheckout true
+            echo "terraform/aws" >> .git/info/sparse-checkout
+            git checkout main
             exit
           EOF
 
@@ -110,5 +113,15 @@ jobs:
         run: |
           ssh -i FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             aws eks update-kubeconfig --region us-east-2 --name allcle-eks-cluster
+            exit
+          EOF
+      
+      # Bastion 내부에서 terraform 실행하여 alb controller와 ingress 생성
+      - name: 'Execute Terraform on Bastion for ALB Controller and Ingress'
+        run: |
+          ssh -i FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            cd ~/Terraform-MR/terraform/aws
+            terraform init
+            terraform apply -auto-approve
             exit
           EOF

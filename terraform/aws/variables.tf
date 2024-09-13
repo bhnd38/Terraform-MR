@@ -89,3 +89,9 @@ variable "private_key_file" {
   type        = string
   default     = "/mnt/c/Users/ebone/Desktop/T2_Final/FPT2-Private-key.pem"
 }
+
+variable "eks_ingress_name" {
+  description = "K8S Ingress Name"
+  type = string
+  default = "allcle-ingress"
+}
