@@ -89,7 +89,7 @@ jobs:
       # Bastion에 tfenv 설치
       - name: 'Install terrafrom on Bastion & clone tf file from git'
         run: |
-          ssh -o StricHostKeyChecking=no -i FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             sudo yum install -y git
             git clone https://github.com/tfutils/tfenv.git ~/.tfenv
             echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bash_profile
@@ -107,7 +107,7 @@ jobs:
       # Kubeconfig 파일 업데이트하기
       - name: 'Configure kubeconfig'
         run: |
-          ssh -i FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             aws eks update-kubeconfig --region us-east-2 --name allcle-eks-cluster
             exit
           EOF
@@ -115,7 +115,7 @@ jobs:
       # Bastion 내부에서 terraform 실행하여 alb controller와 ingress 생성
       - name: 'Execute Terraform on Bastion for ALB Controller and Ingress'
         run: |
-          ssh -i FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             cd ~/Terraform-MR/terraform/aws
             terraform init
             terraform apply -auto-approve
