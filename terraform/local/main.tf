@@ -13,7 +13,7 @@ provider "aws" {
 
 # us-east-1(ohio) 리전 프로바이더(cloudfront 인증서용)
 provider "aws" {
-  alias = "ohio"
+  alias = "virginia"
   region = "us-east-1"
 }
 
@@ -218,6 +218,11 @@ data "aws_ami" "amazon_linux_2023" {
   }
 
   filter {
+    name = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
     name = "virtualization-type"
     values = ["hvm"]
   }
@@ -288,7 +293,6 @@ module "eks" {
       name           = var.node_group_name
       instance_types = [var.instance_type]
       ami_type       = "AL2023_x86_64_STANDARD"
-      key_name       = var.eks_key_pair
 
       min_size     = 2
       max_size     = 4
