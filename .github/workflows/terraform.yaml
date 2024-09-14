@@ -37,7 +37,8 @@ jobs:
       # AWS Secrets Manager에 저장한 PEM 키페어 값 가져오기
       - name: 'Retrive PEM file from AWS Secrets Manager'
         run: |
-          aws secretsmanager get-secret-value --secret-id FPT2-key-US --query SecretString --output text > ~/FPT2-key.pem
+          aws secretsmanager get-secret-value --secret-id FPT2-key-US --query SecretString --output text > secret.json
+          cat secret.json | jq -r '.["FPT2-key-US"]' > ~/FPT2-key.pem
           sudo chmod 600 ~/FPT2-key.pem
       
       # Terraform 설치
