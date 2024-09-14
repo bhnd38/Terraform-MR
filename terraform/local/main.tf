@@ -194,16 +194,6 @@ resource "aws_security_group" "bastion_sg" {
 # }
 
 
-data "aws_secretsmanager_secret" "fpt2_key" {
-  name = "FPT2-key"
-}
-
-# # FPT2-key의 실제 값 데이터 불러오기
-# data "aws_secretsmanager_secret_version" "fpt2_key" {
-#   secret_id = "FPT2-key"
-# }
-
-
 # Bastion 인스턴스 생성
 resource "aws_instance" "bastion" {
   ami           = data.aws_ami.amazon_linux_2023.id
@@ -216,7 +206,6 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "bastion"
   }
-  depends_on = [ data.aws_secretsmanager_secret.fpt2_key ]
 }
 
 
