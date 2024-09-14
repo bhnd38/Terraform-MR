@@ -187,12 +187,6 @@ resource "aws_security_group" "bastion_sg" {
   }
 }
 
-# key 페어 값 aws에서 불러오기
-# resource "aws_key_pair" "FPT2-key" {
-#   key_name = "FPT2-key"
-#   public_key = var.public_key_pair
-# }
-
 
 # Bastion 인스턴스 생성
 resource "aws_instance" "bastion" {

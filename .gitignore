@@ -1,1 +1,9 @@
 terraform/aws/dynamodb_global.tf
+terraform/dd.sh
+terraform/dynamodb.tf
+terraform/dynamodb_global.tf
+terraform/main.tf
+terraform/outputs.tf
+terraform/sqs_lambda.tf
+terraform/variables.tf
+
