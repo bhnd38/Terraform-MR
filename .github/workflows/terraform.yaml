@@ -79,7 +79,7 @@ jobs:
       # Bastion에 kubectl 설치
       - name: 'Install kubectl on Bastion'
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << "EOF"
             curl -LO "https://dl.k8s.2409io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod +x ./kubectl
             sudo mv ./kubectl /usr/local/bin/kubectl
