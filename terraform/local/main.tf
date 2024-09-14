@@ -212,6 +212,7 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "bastion"
   }
+  depends_on = [ data.aws_secretsmanager_secret_version.fpt2_key ]
 }
 
 
