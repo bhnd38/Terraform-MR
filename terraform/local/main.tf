@@ -1,3 +1,11 @@
+terraform {
+  backend "s3" {
+    bucket = "allcle-tf-multi-backend"
+    key = "terraform/terraform.tfstate"
+  }
+}
+
+
 # us-east-2 리전 프로바이더
 provider "aws" {
   region = var.region
