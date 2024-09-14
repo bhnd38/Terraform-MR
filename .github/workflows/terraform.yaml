@@ -37,7 +37,7 @@ jobs:
       # AWS Secrets Manager에 저장한 PEM 키페어 값 가져오기
       - name: 'Retrive PEM file from AWS Secrets Manager'
         run: |
-          aws secretsmanager get-secret-value --secret-id FPT2-key-US --query SecretString --output text > FPT2-key.pem
+          aws secretsmanager get-secret-value --secret-id FPT2-key-US --query SecretString --output text > ~/FPT2-key.pem
           chmod 600 FPT2-key.pem
       
       # Terraform 설치
@@ -79,7 +79,7 @@ jobs:
       # Bastion에 kubectl 설치
       - name: 'Install kubectl on Bastion'
         run: |
-          ssh -o StrictHostKeyChecking=no -i FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             curl -LO "https://dl.k8s.2409io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod +x ./kubectl
             sudo mv ./kubectl /usr/local/bin/kubectl
