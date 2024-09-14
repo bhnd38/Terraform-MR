@@ -24,11 +24,11 @@ jobs:
     steps:
       # 깃허브 repo 확인
       - name: 'Check out the repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       # AWS CLI를 위한 액세스 인증
       - name: 'Set up AWS CLI'
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
