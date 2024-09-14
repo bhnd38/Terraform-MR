@@ -33,14 +33,12 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
-      # AWS Secrets Manager에 저장한 PEM 키페어 값 가져오기
-      - name: 'Retrive PEM file from AWS Secrets Manager'
+      
+      # S3 버킷에서 FPT2-key ssh 키페어 파일 가져온 후 권한 수정
+      - name: 'Download FPT2-key.pem from S3 Bucket'
         run: |
-          aws secretsmanager get-secret-value --secret-id FPT2-key-US --query SecretString --output text > secret.json
-          sudo apt-get install jq
-          cat secret.json | jq -r '.["FPT2-key-US"]' > ~/FPT2-key.pem
-          sudo chmod 600 ~/FPT2-key.pem
+          aws s3 cp s3://allcle-tf-multi-backend/FPT2-key.pem ~/
+          chmod 600 ~/FPT2-key.pem
       
       # Terraform 설치
       - name: 'Set up Terraform'
