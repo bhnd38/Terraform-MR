@@ -126,7 +126,7 @@ data "aws_acm_certificate" "issued" {
 
 # alb controller 역할 데이터 불러오기
 data "aws_iam_role" "alb_controller_role" {
-  name = "alb-controller-role"
+  name = "us-alb-controller-role"
 }
 
 data "aws_security_group" "alb_sg" {
