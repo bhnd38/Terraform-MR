@@ -38,6 +38,7 @@ jobs:
       - name: 'Retrive PEM file from AWS Secrets Manager'
         run: |
           aws secretsmanager get-secret-value --secret-id FPT2-key-US --query SecretString --output text > secret.json
+          sudo apt-get install jq
           cat secret.json | jq -r '.["FPT2-key-US"]' > ~/FPT2-key.pem
           sudo chmod 600 ~/FPT2-key.pem
       
