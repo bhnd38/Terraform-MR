@@ -228,7 +228,7 @@ data "aws_ami" "amazon_linux_2023" {
 
 # ALB 보안 그룹
 resource "aws_security_group" "alb_sg" {
-  vpc_id = data.aws_vpc.allcle_vpc.id
+  vpc_id = aws_vpc.allcle_vpc.id
   name   = "ALB-SG"
 
   ingress {
@@ -280,8 +280,8 @@ module "eks" {
     
   }
 
-  vpc_id     = data.aws_vpc.allcle_vpc.id
-  subnet_ids = [data.aws_subnet.public_a.id, data.aws_subnet.public_c.id, data.aws_subnet.private_a.id, data.aws_subnet.private_c.id]
+  vpc_id     = aws_vpc.allcle_vpc.id
+  subnet_ids = [aws_subnet.public_a.id, aws_subnet.public_c.id, aws_subnet.private_a.id, aws_subnet.private_c.id]
 
   eks_managed_node_groups = {
     allcle_eks_ng = {
@@ -295,7 +295,7 @@ module "eks" {
       desired_size = 2
 
       # vpc_security_group_ids = [aws_security_group.eks_nodes_sg.id]
-      subnet_ids = [data.aws_subnet.private_a.id, data.aws_subnet.private_c.id]
+      subnet_ids = [ aws_subnet.private_a.id, aws_subnet.private_c.id ]
     }
   }
 
@@ -311,7 +311,7 @@ resource "aws_security_group_rule" "eks_from_bastion" {
   to_port = 65535
   protocol = "tcp"
   security_group_id = module.eks.cluster_security_group_id
-  source_security_group_id = data.aws_security_group.bastion_sg.id
+  source_security_group_id = aws_security_group.bastion_sg.id
 
   description = "Allow all TCP traffic from Bastion to EKS cluster"
 }
