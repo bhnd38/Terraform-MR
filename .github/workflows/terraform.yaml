@@ -38,7 +38,7 @@ jobs:
       - name: 'Retrive PEM file from AWS Secrets Manager'
         run: |
           aws secretsmanager get-secret-value --secret-id FPT2-key-US --query SecretString --output text > ~/FPT2-key.pem
-          chmod 600 ~/FPT2-key.pem
+          sudo chmod 600 ~/FPT2-key.pem
       
       # Terraform 설치
       - name: 'Set up Terraform'
