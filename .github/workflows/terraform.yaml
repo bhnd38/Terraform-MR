@@ -1,6 +1,7 @@
 name: Terraform Workflow
 
-# on:
+on:
+  workflow_dispatch: # 수동 실행 버튼 활성화
 #   push:
 #     branches:
 #       - 'main'

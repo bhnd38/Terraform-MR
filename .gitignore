@@ -1,2 +1,1 @@
-.github/workflows
 terraform/aws/dynamodb_global.tf
