@@ -105,22 +105,37 @@ jobs:
             git checkout main
             exit
           EOF
+      
+      # AWS credentials 값 스크립트파일로 만들기
+      - name: 'Create script with AWS Credentials'
+        run: |
+          echo "export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID}}" >> aws-creds.sh
+          echo "export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY}}" >> aws-creds.sh
+          echo "export AWS_REGION=${{ env.AWS_REGION }}" >> aws-creds.sh
+          chmod 600 aws-creds.sh
+      
+      # SCP로 Bastion에 파일 전송
+      - name: "Transfer AWS credentials to Bastion"
+        run: |
+          scp -i ~/FPT2-key.pem -o StrictHostKeyChecking=no aws-creds.sh ec2-user@${{ env.BASTION_IP }}:~/aws-creds.sh
+      
+      # Bastion 접속 후 aws-creds.sh 파일로 aws cli 구성
+      - name: 'Configure AWS on Bastion'
+        run: |
+          ssh -i ~/FPT2-key.pem -o StrictHostKeyChecking=no ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            source ~/.aws-creds.sh
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws configure set region $AWS_REGION
+            aws sts get-caller-identity
+            rm -rf ~/aws-creds.sh
+            exit
+          EOF
 
       # Kubeconfig 파일 업데이트하기
       - name: 'Configure kubeconfig'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-2  # AWS CLI가 사용할 리전
         run: |
           ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-            export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-            export AWS_REGION=${AWS_REGION}
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-            aws configure set region us-east-2
-            aws sts get-caller-identity
             aws eks update-kubeconfig --region us-east-2 --name allcle-eks-cluster
             exit
           EOF
