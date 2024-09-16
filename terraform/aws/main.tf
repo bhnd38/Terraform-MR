@@ -129,12 +129,6 @@ data "aws_iam_role" "alb_controller_role" {
   name = "us-alb-controller-role"
 }
 
-data "aws_security_group" "alb_sg" {
-  filter {
-    name = "tag:Name"
-    values = ["ALB-SG"]
-  }
-}
 
 # HELM 차트로 alb controller 배포
 resource "helm_release" "alb_controller" {
