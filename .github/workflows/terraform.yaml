@@ -109,28 +109,36 @@ jobs:
       # AWS credentials 값 스크립트파일로 만들기
       - name: 'Create script with AWS Credentials'
         run: |
-          echo "export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID}}" >> aws-creds.sh
-          echo "export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY}}" >> aws-creds.sh
-          echo "export AWS_REGION=${{ env.AWS_REGION }}" >> aws-creds.sh
-          chmod 600 aws-creds.sh
+          echo "${{ secrets.AWS_ACCESS_KEY_ID }}" >> aws-creds.txt
+          echo "${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> aws-creds.txt
+          echo "${{ env.AWS_REGION }}" >> aws-creds.txt
+          chmod 600 aws-creds.txt
       
       # SCP로 Bastion에 파일 전송
       - name: "Transfer AWS credentials to Bastion"
         run: |
-          scp -i ~/FPT2-key.pem -o StrictHostKeyChecking=no aws-creds.sh ec2-user@${{ env.BASTION_IP }}:~/aws-creds.sh
+          scp -i ~/FPT2-key.pem -o StrictHostKeyChecking=no aws-creds.sh ec2-user@${{ env.BASTION_IP }}:~/aws-creds.txt
       
       # Bastion 접속 후 aws-creds.sh 파일로 aws cli 구성
       - name: 'Configure AWS on Bastion'
         run: |
           ssh -i ~/FPT2-key.pem -o StrictHostKeyChecking=no ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            source ~/.aws-creds.sh
+            export AWS_ACCESS_KEY_ID=$(sed -n '1p' ~/aws-creds.txt)
+            export AWS_SECRET_ACCESS_KEY=$(sed -n '2p' ~/aws-creds.txt)
+            export AWS_REGION=$(sed -n '3p' ~/aws-creds.txt)
             aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
             aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set region $AWS_REGION
             aws sts get-caller-identity
-            rm -rf ~/aws-creds.sh
+            rm -rf ~/aws-creds.txt
             exit
           EOF
+      
+      # Runner에 저장된 aws-creds.txt 파일 삭제
+      - name: 'Delete aws-creds.txt'
+        run: |
+          rm -rf aws-creds.txt
+
 
       # Kubeconfig 파일 업데이트하기
       - name: 'Configure kubeconfig'
