@@ -10,7 +10,7 @@ resource "aws_sqs_queue" "pre_enroll_queue" {
 
 # Lambda의 IAM Role 데이터 불러오기
 data "aws_iam_role" "lambda_role" {
-  name = "lambda-role"
+  name = "lambda_role"
 }
 
 
