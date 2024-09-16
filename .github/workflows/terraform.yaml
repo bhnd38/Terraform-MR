@@ -129,7 +129,6 @@ jobs:
             aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
             aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set region $AWS_REGION
-            aws sts get-caller-identity
             rm -rf ~/aws-creds.txt
             exit
           EOF
@@ -144,7 +143,7 @@ jobs:
       - name: 'Configure kubeconfig'
         run: |
           ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            aws eks update-kubeconfig --region us-east-2 --name allcle-eks-cluster
+            aws eks update-kubeconfig --region $AWS_REGION --name allcle-eks-cluster
             exit
           EOF
       
