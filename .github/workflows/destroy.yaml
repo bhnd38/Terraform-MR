@@ -22,6 +22,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       
+      # S3 버킷에서 FPT2-key ssh 키페어 파일 가져온 후 권한 수정
+      - name: 'Download FPT2-key.pem from S3 Bucket'
+        run: |
+          aws s3 cp s3://allcle-tf-multi-backend/FPT2-key.pem ~/
+          chmod 600 ~/FPT2-key.pem
+
       # Bastion의 퍼블릭 IP 가져오기
       - name: 'Retrieve Bastion Public IP'
         id: get_bastion_ip
