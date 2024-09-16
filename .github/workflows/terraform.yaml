@@ -106,7 +106,7 @@ jobs:
             exit
           EOF
       
-      # AWS credentials 값 스크립트파일로 만들기
+      # AWS credentials 값 txt파일로 만들기
       - name: 'Create script with AWS Credentials'
         run: |
           echo "${{ secrets.AWS_ACCESS_KEY_ID }}" >> aws-creds.txt
@@ -117,9 +117,9 @@ jobs:
       # SCP로 Bastion에 파일 전송
       - name: "Transfer AWS credentials to Bastion"
         run: |
-          scp -i ~/FPT2-key.pem -o StrictHostKeyChecking=no aws-creds.sh ec2-user@${{ env.BASTION_IP }}:~/aws-creds.txt
+          scp -i ~/FPT2-key.pem -o StrictHostKeyChecking=no aws-creds.txt ec2-user@${{ env.BASTION_IP }}:~/aws-creds.txt
       
-      # Bastion 접속 후 aws-creds.sh 파일로 aws cli 구성
+      # Bastion 접속 후 aws-creds.txt 파일로 aws cli 구성
       - name: 'Configure AWS on Bastion'
         run: |
           ssh -i ~/FPT2-key.pem -o StrictHostKeyChecking=no ec2-user@${{ env.BASTION_IP }} << 'EOF'
