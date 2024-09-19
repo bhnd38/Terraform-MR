@@ -101,7 +101,7 @@ jobs:
             git clone --no-checkout https://github.com/bhnd38/Terraform-MR.git
             cd Terraform-MR
             git config core.sparseCheckout true
-            echo "terraform/aws" >> .git/info/sparse-checkout
+            echo "terraform/bastion" >> .git/info/sparse-checkout
             git checkout main
             exit
           EOF
@@ -151,7 +151,7 @@ jobs:
       - name: 'Execute Terraform on Bastion for ALB Controller and Ingress'
         run: |
           ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            cd ~/Terraform-MR/terraform/aws
+            cd ~/Terraform-MR/terraform/bastion
             terraform init
             terraform apply -auto-approve
             exit

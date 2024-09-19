@@ -102,6 +102,11 @@ data "aws_ami" "amazon_linux_2023" {
   }
 
   filter {
+    name = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
     name = "virtualization-type"
     values = ["hvm"]
   }
