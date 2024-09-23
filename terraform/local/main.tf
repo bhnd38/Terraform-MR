@@ -287,7 +287,7 @@ resource "aws_instance" "bastion" {
     aws_security_group.bastion_sg.id
   ]
   tags = {
-    Name = "Bastion"
+    Name = "bastion"
   }
   depends_on = [ aws_iam_instance_profile.bastion_instance_profile ]
 }
