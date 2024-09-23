@@ -255,7 +255,7 @@ resource "aws_iam_policy" "bastion_policy" {
       },
       {
         Effect = "Allow"
-        Action = [ "iam:GetRole" ]
+        Action = [ "iam:*" ]
         Resource = "*"
       },
       {
@@ -387,6 +387,7 @@ module "eks" {
   version         = "~> 20.0"
   cluster_name    = var.eks_cluster_name
   cluster_version = "1.30"
+  enable_irsa = true
   enable_cluster_creator_admin_permissions = true
   cluster_endpoint_public_access = true
   cluster_endpoint_private_access = true
@@ -425,6 +426,11 @@ module "eks" {
   tags = {
     Environment = "ALLCLE"
   }
+}
+
+output "oidc_provider_arn" {
+  value = module.eks.oidc_provider_arn
+  depends_on = [ module.eks ]
 }
 
 # EKS 클러스터 보안 그룹에 인바운드 룰 추가
