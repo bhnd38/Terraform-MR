@@ -194,11 +194,13 @@ resource "aws_instance" "bastion" {
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public_a.id
   key_name      = var.public_key_pair
+  iam_instance_profile = aws_iam_role.bastion_role.name
+
   vpc_security_group_ids = [
     aws_security_group.bastion_sg.id
   ]
   tags = {
-    Name = "bastion"
+    Name = "Bastion"
   }
 }
 
