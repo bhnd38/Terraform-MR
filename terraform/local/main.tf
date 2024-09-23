@@ -243,6 +243,16 @@ resource "aws_iam_policy" "bastion_policy" {
           "logs:PutLogEvents"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [ "acm:ListCertificates" ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [ "iam:GetRole" ]
+        Resource = "*"
       }
     ]
   })
