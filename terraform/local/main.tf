@@ -265,6 +265,7 @@ resource "aws_iam_policy" "bastion_policy" {
         Action = [
           "sqs:*"
         ]
+        Resource = "*"
       }
     ]
   })
