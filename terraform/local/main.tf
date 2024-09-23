@@ -207,9 +207,7 @@ resource "aws_iam_policy" "bastion_policy" {
       {
         Effect = "Allow"
         Action = [
-          "eks:DescribeCluster",
-          "eks:ListClusters",
-          "eks:AccessKubernetesApi"
+          "eks:*"
         ]
         Resource = "*"
       },
@@ -264,6 +262,14 @@ resource "aws_iam_policy" "bastion_policy" {
         Effect = "Allow"
         Action = [
           "sqs:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:*",
+          "events:*"
         ]
         Resource = "*"
       }
