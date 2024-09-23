@@ -13,7 +13,7 @@ resource "aws_iam_role" "alb_controller_role" {
       }
     ]
   })
-
+  depends_on = [ module.eks ]
   tags = {
     Name = "ALBIngressControllerRoleUS"
   }
