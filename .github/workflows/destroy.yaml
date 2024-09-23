@@ -37,10 +37,10 @@ jobs:
           echo "BASTION_IP=$PUBLIC_IP" >> $GITHUB_ENV
       
       # Bastion에서 terraform destroy 실행
-      - name: 'Install terrafrom on Bastion & clone tf file from git'
+      - name: 'Destroy Terraform'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            cd ~/Terraform-MR/terraform/aws
+            cd ~/Terraform-MR/terraform/bastion
             terraform init
             terraform destroy -auto-approve
             exit

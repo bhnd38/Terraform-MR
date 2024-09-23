@@ -199,6 +199,24 @@ resource "kubernetes_ingress_v1" "allcle-ingress" {
         }
       }
     }
+
+    rule {
+      host = "www.pre.allcle.net"
+      http {
+        path {
+          path = "/*"
+          path_type = "ImplementationSpecific"
+          backend {
+            service {
+              name = "nginx-pre"
+              port {
+                number = 8080
+              }
+            }
+          }
+        }
+      }
+    }
   }
   depends_on = [ helm_release.alb_controller ]  
 }
