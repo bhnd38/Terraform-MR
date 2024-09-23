@@ -37,7 +37,7 @@ jobs:
           echo "BASTION_IP=$PUBLIC_IP" >> $GITHUB_ENV
       
       # Bastion에서 terraform destroy 실행
-      - name: 'Destroy Terraform'
+      - name: 'Destroy Terraform on Bastion'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             cd ~/Terraform-MR/terraform/bastion

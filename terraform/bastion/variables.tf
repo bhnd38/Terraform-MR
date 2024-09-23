@@ -44,7 +44,7 @@ variable "instance_type" {
 variable "eks_cluster_name" {
   description = "EKS Cluster name"
   type        = string
-  default     = "allcle-eks-cluster"
+  default     = "allcle-cluster"
 }
 
 variable "node_group_name" {

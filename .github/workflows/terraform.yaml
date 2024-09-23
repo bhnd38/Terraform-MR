@@ -143,7 +143,7 @@ jobs:
       - name: 'Configure kubeconfig'
         run: |
           ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            aws eks update-kubeconfig --region us-east-2 --name allcle-eks-cluster
+            aws eks update-kubeconfig --region us-east-2 --name allcle-cluster
             exit
           EOF
       
