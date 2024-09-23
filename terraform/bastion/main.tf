@@ -186,7 +186,7 @@ resource "kubernetes_ingress_v1" "allcle-ingress" {
       host = "www.allcle.net"
       http {
         path {
-          path = "/"
+          path = "/*"
           path_type = "ImplementationSpecific"
           backend {
             service {
