@@ -187,6 +187,10 @@ resource "aws_security_group" "bastion_sg" {
   }
 }
 
+# Bastion에 부여할 IAM Role 데이터 불러오기
+data "aws_iam_role" "bastion_role" {
+  name = BastionHostRole
+}
 
 # Bastion 인스턴스 생성
 resource "aws_instance" "bastion" {
