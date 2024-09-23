@@ -249,7 +249,8 @@ resource "aws_iam_policy" "bastion_policy" {
         Action = [
           "acm:ListCertificates",
           "acm:DescribeCertificate",
-          "acm:GetCertificate"
+          "acm:GetCertificate",
+          "acm:ListTagsForCertificate"
         ]
         Resource = "*"
       },
