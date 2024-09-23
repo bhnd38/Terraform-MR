@@ -92,7 +92,7 @@ jobs:
       - name: 'Install terrafrom on Bastion & clone tf file from git'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            sudo yum install -y git
+            sudo yum install -y git unzip
             git clone https://github.com/tfutils/tfenv.git ~/.tfenv
             echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bash_profile
             source ~/.bash_profile
