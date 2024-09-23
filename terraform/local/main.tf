@@ -201,6 +201,11 @@ resource "aws_iam_policy" "bastion_policy" {
     Statement = [
       {
         Effect = "Allow"
+        Action = [ "ec2:*" ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
         Action = [
           "eks:DescribeCluster",
           "eks:ListClusters"
