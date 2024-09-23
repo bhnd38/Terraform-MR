@@ -333,3 +333,9 @@ resource "aws_iam_role_policy_attachment" "attach_bastion_policy" {
   policy_arn = aws_iam_policy.bastion_policy.arn
   role       = aws_iam_role.bastion_role.name
 }
+
+# IAM Instance Profile 생성
+resource "aws_iam_instance_profile" "bastion_instance_profile" {
+  name = "BastionHostInstanceProfile"
+  role = aws_iam_role.bastion_role.name  
+}

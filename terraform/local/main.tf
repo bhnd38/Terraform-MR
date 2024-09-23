@@ -187,9 +187,9 @@ resource "aws_security_group" "bastion_sg" {
   }
 }
 
-# Bastion에 부여할 IAM Role 데이터 불러오기
-data "aws_iam_role" "bastion_role" {
-  name = BastionHostRole
+# Bastion에 부여할 IAM Instance Profile 데이터 불러오기
+data "aws_iam_instance_profile" "bastion_instance_profile" {
+  name = "BastionHostInstanceProfile"
 }
 
 # Bastion 인스턴스 생성
@@ -198,7 +198,7 @@ resource "aws_instance" "bastion" {
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public_a.id
   key_name      = var.public_key_pair
-  iam_instance_profile = data.aws_iam_role.bastion_role.name
+  iam_instance_profile = data.aws_iam_instance_profile.bastion_instance_profile.name
 
   vpc_security_group_ids = [
     aws_security_group.bastion_sg.id
