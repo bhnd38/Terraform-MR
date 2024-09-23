@@ -187,9 +187,89 @@ resource "aws_security_group" "bastion_sg" {
   }
 }
 
-# Bastion에 부여할 IAM Instance Profile 데이터 불러오기
-data "aws_iam_instance_profile" "bastion_instance_profile" {
+#-------------------------------------------------------------------------------------------
+
+## Bastion에 필요한 IAM Instance Profile용 Role 생성
+
+# IAM 정책 생성
+resource "aws_iam_policy" "bastion_policy" {
+  name        = "BastionHostPolicy"
+  description = "Policy for Bastion host to access EKS, S3, DynamoDB, and CloudWatch Logs"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:PutObject"
+        ]
+        Resource = [
+          "arn:aws:s3:::*",
+          "arn:aws:s3:::/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:Scan",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem"
+        ]
+        Resource = "arn:aws:dynamodb:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# IAM 역할 생성
+resource "aws_iam_role" "bastion_role" {
+  name               = "BastionHostRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# IAM 역할에 정책 연결
+resource "aws_iam_role_policy_attachment" "attach_bastion_policy" {
+  policy_arn = aws_iam_policy.bastion_policy.arn
+  role       = aws_iam_role.bastion_role.name
+}
+
+# IAM Instance Profile 생성
+resource "aws_iam_instance_profile" "bastion_instance_profile" {
   name = "BastionHostInstanceProfile"
+  role = aws_iam_role.bastion_role.name  
 }
 
 # Bastion 인스턴스 생성
@@ -198,7 +278,7 @@ resource "aws_instance" "bastion" {
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public_a.id
   key_name      = var.public_key_pair
-  iam_instance_profile = data.aws_iam_instance_profile.bastion_instance_profile.name
+  iam_instance_profile = aws_iam_instance_profile.bastion_instance_profile.name
 
   vpc_security_group_ids = [
     aws_security_group.bastion_sg.id
@@ -206,6 +286,7 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "Bastion"
   }
+  depends_on = [ aws_iam_instance_profile.bastion_instance_profile ]
 }
 
 
