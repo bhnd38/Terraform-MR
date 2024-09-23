@@ -430,7 +430,6 @@ module "eks" {
 
 output "oidc_provider_arn" {
   value = module.eks.oidc_provider_arn
-  depends_on = [ module.eks ]
 }
 
 # EKS 클러스터 보안 그룹에 인바운드 룰 추가

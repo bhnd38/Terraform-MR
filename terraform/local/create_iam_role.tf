@@ -1,9 +1,5 @@
-data "aws_iam_openid_connect_provider" "eks_oidc_provider" {
-  for_each = { for provider in aws_iam_openid_connect_provider.example : provider.arn => provider if provider.url == "oidc.eks.us-east-2.amazonaws.com" }
-
-  arn = each.value.arn
-
-  depends_on = [ module.eks ]
+data "aws_iam_openid_connect_provider" "eks" {
+  arn = module.eks.oidc_provider_arn
 }
 
 # EKS ALB Controller IAM Role 생성
@@ -16,7 +12,7 @@ resource "aws_iam_role" "alb_controller_role" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks_oidc_provider.arn
+          Federated = data.aws_iam_openid_connect_provider.eks.arn
         }
       }
     ]
