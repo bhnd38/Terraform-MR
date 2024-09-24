@@ -677,12 +677,12 @@ resource "helm_release" "alb_controller" {
         loadBalancer = {
           advancedConfig = {
             loadBalancer = {
-              security_groups = [data.aws_security_group.alb_sg.id]
+              security_groups = [aws_security_group.alb_sg.id]
             }
           }
         }
       }
     })
   ]
-  depends_on = [ aws_iam_role.alb_controller_role ]
+  depends_on = [ aws_security_group.alb_sg, aws_iam_role.alb_controller_role ]
 }
