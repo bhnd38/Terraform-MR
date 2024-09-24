@@ -191,115 +191,53 @@ resource "aws_security_group" "bastion_sg" {
 
 ## Bastion에 필요한 IAM Instance Profile용 Role 생성
 
-# IAM 정책 생성
-resource "aws_iam_policy" "bastion_policy" {
-  name        = "BastionHostPolicy"
-  description = "Policy for Bastion host to access EKS, S3, DynamoDB, and CloudWatch Logs"
+# IAM 역할 생성
+resource "aws_iam_role" "bastion_role" {
+  name               = "BastionRole"
+  assume_role_policy = data.aws_iam_policy_document.bastion_assume_role_policy.json
+}
 
+# Assume Role Policy
+data "aws_iam_policy_document" "bastion_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# 모든 권한을 포함하는 IAM 정책
+resource "aws_iam_policy" "bastion_full_access" {
+  name        = "BastionFullAccessPolicy"
+  description = "Full access to EKS, S3, EventBridge, IAM, DynamoDB, Lambda, SQS, and CloudWatch Logs"
+  
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
-        Action = [ "ec2:*" ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
         Action = [
-          "eks:*"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:ListBucket",
-          "s3:PutObject"
-        ]
-        Resource = [
-          "arn:aws:s3:::*",
-          "arn:aws:s3:::/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:Scan",
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem"
-        ]
-        Resource = "arn:aws:dynamodb:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "acm:ListCertificates",
-          "acm:DescribeCertificate",
-          "acm:GetCertificate",
-          "acm:ListTagsForCertificate"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [ "iam:*" ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "sqs:*"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
+          "eks:*",
+          "s3:*",
+          "events:*",
+          "iam:*",
+          "dynamodb:*",
           "lambda:*",
-          "events:*"
-        ]
+          "sqs:*",
+          "logs:*"  # CloudWatch Logs 관련 권한 추가
+        ],
         Resource = "*"
       }
     ]
   })
 }
 
-# IAM 역할 생성
-resource "aws_iam_role" "bastion_role" {
-  name               = "BastionHostRole"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-  depends_on = [ aws_iam_policy.bastion_policy ]
-}
-
-# IAM 역할에 정책 연결
+# IAM 역할에 정책 붙이기
 resource "aws_iam_role_policy_attachment" "attach_bastion_policy" {
-  policy_arn = aws_iam_policy.bastion_policy.arn
   role       = aws_iam_role.bastion_role.name
-  depends_on = [ aws_iam_role.bastion_role ]
+  policy_arn = aws_iam_policy.bastion_full_access.arn
 }
 
 # IAM Instance Profile 생성
@@ -387,7 +325,6 @@ module "eks" {
   version         = "~> 20.0"
   cluster_name    = var.eks_cluster_name
   cluster_version = "1.30"
-  enable_irsa = true
   enable_cluster_creator_admin_permissions = true
   cluster_endpoint_public_access = true
   cluster_endpoint_private_access = true
@@ -428,9 +365,6 @@ module "eks" {
   }
 }
 
-output "oidc_provider_arn" {
-  value = module.eks.oidc_provider_arn
-}
 
 # EKS 클러스터 보안 그룹에 인바운드 룰 추가
 resource "aws_security_group_rule" "eks_from_bastion" {
