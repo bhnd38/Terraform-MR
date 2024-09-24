@@ -136,34 +136,34 @@ data "aws_iam_role" "alb_controller_role" {
 
 
 # HELM 차트로 alb controller 배포
-# resource "helm_release" "alb_controller" {
-#   name       = "aws-load-balancer-controller"
-#   repository = "https://aws.github.io/eks-charts"
-#   chart      = "aws-load-balancer-controller"
-#   namespace  = "kube-system"
+resource "helm_release" "alb_controller" {
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
 
-#   values = [
-#     yamlencode({
-#       clusterName  = var.eks_cluster_name
-#       serviceAccount = {
-# 	create = true
-#         name = "aws-load-balancer-controller"
-#         annotations = {
-#           "eks.amazonaws.com/role-arn" = data.aws_iam_role.alb_controller_role.arn
-#         }
-#       }
-#       service = {
-#         loadBalancer = {
-#           advancedConfig = {
-#             loadBalancer = {
-#               security_groups = [data.aws_security_group.alb_sg.id]
-#             }
-#           }
-#         }
-#       }
-#     })
-#   ]
-# }
+  values = [
+    yamlencode({
+      clusterName  = var.eks_cluster_name
+      serviceAccount = {
+	create = true
+        name = "aws-load-balancer-controller"
+        annotations = {
+          "eks.amazonaws.com/role-arn" = data.aws_iam_role.alb_controller_role.arn
+        }
+      }
+      service = {
+        loadBalancer = {
+          advancedConfig = {
+            loadBalancer = {
+              security_groups = [data.aws_security_group.alb_sg.id]
+            }
+          }
+        }
+      }
+    })
+  ]
+}
 
 
 resource "kubernetes_ingress_v1" "allcle-ingress" {
