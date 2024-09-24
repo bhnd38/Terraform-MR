@@ -1,6 +1,6 @@
-data "aws_iam_openid_connect_provider" "eks" {
-  arn = module.eks.oidc_provider_arn
-}
+# data "aws_iam_openid_connect_provider" "eks" {
+#   arn = module.eks.oidc_provider_arn
+# }
 
 # EKS ALB Controller IAM Role 생성
 resource "aws_iam_role" "alb_controller_role" {
@@ -17,7 +17,7 @@ resource "aws_iam_role" "alb_controller_role" {
       }
     ]
   })
-  depends_on = [ module.eks, data.aws_iam_openid_connect_provider.eks_oidc_provider ]
+  
   tags = {
     Name = "ALBIngressControllerRoleUS"
   }
