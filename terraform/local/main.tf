@@ -653,3 +653,36 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_controller_attach" {
     policy_arn = aws_iam_policy.alb_ingress_controller_policy.arn
     role       = aws_iam_role.alb_controller_role.name
 }
+
+#--------------------------------------------------------------------------
+
+# HELM 차트로 ALB Controller 생성
+resource "helm_release" "alb_controller" {
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+
+  values = [
+    yamlencode({
+      clusterName  = var.eks_cluster_name
+      serviceAccount = {
+	create = true
+        name = "aws-load-balancer-controller"
+        annotations = {
+          "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller_role.arn
+        }
+      }
+      service = {
+        loadBalancer = {
+          advancedConfig = {
+            loadBalancer = {
+              security_groups = [data.aws_security_group.alb_sg.id]
+            }
+          }
+        }
+      }
+    })
+  ]
+  depends_on = [ aws_iam_role.alb_controller_role ]
+}
