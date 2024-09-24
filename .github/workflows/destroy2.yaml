@@ -57,10 +57,10 @@ jobs:
         run: terraform init
         working-directory: ./terraform/local
       
-      # Terraform state에서 iam role 제거
-      - name: remove IAM Role
-        run: terraform state rm aws_iam_role.alb_controller_role
-        working-directory: ./terraform/local
+      # # Terraform state에서 iam role 제거
+      # - name: remove IAM Role
+      #   run: terraform state rm aws_iam_role.alb_controller_role
+      #   working-directory: ./terraform/local
 
       # Terraform Destroy
       - name: Terraform Destroy
