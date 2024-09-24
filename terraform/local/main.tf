@@ -219,10 +219,12 @@ resource "aws_iam_policy" "bastion_full_access" {
       {
         Effect = "Allow"
         Action = [
+          "ec2:*",
           "eks:*",
           "s3:*",
           "events:*",
           "iam:*",
+          "acm:*",
           "dynamodb:*",
           "lambda:*",
           "sqs:*",
