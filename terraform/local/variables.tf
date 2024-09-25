@@ -102,3 +102,19 @@ variable "eks_ingress_name" {
   type = string
   default = "allcle-ingress"
 }
+
+variable "allcle_eks_us_repo" {
+  type = string
+  default = "allcle-eks-us"
+}
+
+variable "allcle_eks_pre_us_repo" {
+  type = string
+  default = "allcle-eks-pre-us"
+}
+
+variable "allcle_on_us_repo" {
+  description = "Ohio region ci/cd repo name for onpremise"
+  type = string
+  default = "allcle-on-us"
+}
