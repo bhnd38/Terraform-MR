@@ -28,7 +28,7 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  kubernetes{
+  kubernetes {
     host = data.aws_eks_cluster.cluster.endpoint
     #config_path = "~/.kube/config"
     cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)

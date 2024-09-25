@@ -240,7 +240,8 @@ resource "aws_iam_policy" "bastion_full_access" {
           "dynamodb:*",
           "lambda:*",
           "sqs:*",
-          "logs:*"  # CloudWatch Logs 관련 권한 추가
+          "logs:*",  # CloudWatch Logs 관련 권한 추가
+          "sts:GetCallerIdentity"
         ],
         Resource = "*"
       }
