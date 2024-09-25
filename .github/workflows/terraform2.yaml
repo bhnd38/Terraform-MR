@@ -77,6 +77,10 @@ jobs:
           PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name, Values=bastion" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
           echo "Bastion Public IP: $PUBLIC_IP"
           echo "BASTION_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      
+      # Bastion Instance 실행 시간 대기
+      - name: 'Wait for 10 seconds'
+        run: sleep 10
 
       # Bastion에 kubectl 설치
       - name: 'Install kubectl on Bastion'
@@ -92,7 +96,7 @@ jobs:
       - name: 'Install terrafrom on Bastion & clone tf file from git'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            sudo yum install -y git unzip
+            sudo yum install -y git-all unzip
             git clone https://github.com/tfutils/tfenv.git ~/.tfenv
             echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bash_profile
             source ~/.bash_profile
