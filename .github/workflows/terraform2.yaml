@@ -114,7 +114,8 @@ jobs:
       - name: 'Install terraform on Bastion & clone tf file from git'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id GITHUB_TOKEN --query 'SecretString' --output text)
+            TOKEN=$(aws secretsmanager get-secret-value --secret-id GITHUB_TOKEN --query 'SecretString' --output text)
+            GITHUB_TOKEN=$(echo $TOKEN | jq -r '.GITHUB_TOKEN')
             git config --global user.name "Song9809"
             git config --global user.email "syhsong9809@gmail.com"
             git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-us.git
