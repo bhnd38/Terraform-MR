@@ -39,7 +39,7 @@ resource "helm_release" "argocd" {
     version = "2.12.3"
 
     values = [
-        file("${path.module}/argocd-values.yaml")
+        file("${var.allcle_eks_us_repo}/values.yaml")
     ]
     # depends_on = [ kubernetes_namespace.argocd ]
 }
@@ -55,7 +55,7 @@ resource "kubernetes_service" "argocd_server" {
         type = "LoadBalancer"
 
         selector = {
-            app.kubernetes.io/name = "argocd-server"
+            "app.kubernetes.io/name" = "argocd-server"
         }
 
         port {
