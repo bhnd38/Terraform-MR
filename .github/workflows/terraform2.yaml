@@ -93,7 +93,7 @@ jobs:
           EOF
       
       # Bastion에 tfenv 설치
-      - name: 'Install terrafrom on Bastion & clone tf file from git'
+      - name: 'Install terraform on Bastion & clone tf file from git'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             sudo yum install -y git-all unzip
@@ -107,6 +107,22 @@ jobs:
             git config core.sparseCheckout true
             echo "terraform/bastion" >> .git/info/sparse-checkout
             git checkout main
+            exit
+          EOF
+      
+      # Bastion에서 AWS Secrets Manager의 GIT_TOKEN 값 받아오기
+      - name: 'Install terraform on Bastion & clone tf file from git'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id GITHUB_TOKEN --query 'SecretString' --output text)
+            git config --global user.name "Song9809"
+            git config --global user.email "syhsong9809@gmail.com"
+            git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-us.git
+            echo "#Test 입니다" >> allcle-eks-us/.helmignore
+            cd allcle-eks-us
+            git add .
+            git commit -m "Multi Region Testing" || echo "No changes to commit"
+            git push origin main || echo "Failed to push changes"
             exit
           EOF
 
