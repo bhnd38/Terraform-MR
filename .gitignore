@@ -1,3 +1,4 @@
 terraform/bastion/dynamodb_global.tf
 dynamodb.tf
 dynamodb_global.tf
+terraform/bastion/eks.tf

@@ -194,19 +194,31 @@ resource "aws_security_group" "bastion_sg" {
 # IAM 역할 생성
 resource "aws_iam_role" "bastion_role" {
   name               = "BastionRole"
-  assume_role_policy = data.aws_iam_policy_document.bastion_assume_role_policy.json
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
 }
 
 # Assume Role Policy
-data "aws_iam_policy_document" "bastion_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
+# data "aws_iam_policy_document" "bastion_assume_role_policy" {
+#   statement {
+#     actions = ["sts:AssumeRole"]
+#     principals {
+#       type        = "Service"
+#       identifiers = ["ec2.amazonaws.com"]
+#     }
+#   }
+# }
 
 # 모든 권한을 포함하는 IAM 정책
 resource "aws_iam_policy" "bastion_full_access" {
@@ -412,7 +424,7 @@ resource "aws_iam_role" "alb_controller_role" {
         }
         ]
     })
-    
+    depends_on = [ module.eks ]
     tags = {
         Name = "ALBIngressControllerRoleUS"
     }

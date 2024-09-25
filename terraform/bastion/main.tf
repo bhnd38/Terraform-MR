@@ -163,6 +163,7 @@ resource "helm_release" "alb_controller" {
       }
     })
   ]
+  depends_on = [ data.aws_iam_role.alb_controller_role ]
 }
 
 
