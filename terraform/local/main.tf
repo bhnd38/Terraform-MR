@@ -254,7 +254,7 @@ resource "aws_security_group" "bastion_sg" {
 
 # Bastion 인스턴스 생성
 resource "aws_instance" "bastion" {
-  ami           = data.aws_ami.amazon_linux_2023.id
+  ami           = var.bastion_ami_id
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public_a.id
   key_name      = var.public_key_pair
