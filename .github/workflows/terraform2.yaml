@@ -1,0 +1,126 @@
+name: Terraform Workflow
+
+on:
+  workflow_dispatch: # 수동 실행 버튼 활성화
+#   push:
+#     branches:
+#       - 'main'
+#   pull_request:
+#     branches:
+#       - 'main'
+
+env:
+  AWS_REGION: us-east-2
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  terraform:
+    name: 'Terraform for Multi-region'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # 깃허브 repo 확인
+      - name: 'Check out the repository'
+        uses: actions/checkout@v4
+      
+      # AWS CLI를 위한 액세스 인증
+      - name: 'Set up AWS CLI'
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      # S3 버킷에서 FPT2-key ssh 키페어 파일 가져온 후 권한 수정
+      - name: 'Download FPT2-key.pem from S3 Bucket'
+        run: |
+          aws s3 cp s3://allcle-tf-multi-backend/FPT2-key.pem ~/
+          chmod 600 ~/FPT2-key.pem
+      
+      # Terraform 설치
+      - name: 'Set up Terraform'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.5
+      
+      # vpc 및 bastion 생성하는 Terraform init 
+      - name: Initialize Terraform
+        run: terraform init
+        working-directory: ./terraform/local
+
+      # Terraform plan
+      - name: Plan Terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: terraform plan
+        working-directory: ./terraform/local
+
+      # Terraform apply
+      - name: Apply Terraform
+        if: github.ref == 'refs/heads/main'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: terraform apply -auto-approve
+        working-directory: ./terraform/local
+      
+      # Bastion의 퍼블릭 IP 가져오기
+      - name: 'Retrieve Bastion Public IP'
+        id: get_bastion_ip
+        run: |
+          PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name, Values=bastion" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+          echo "Bastion Public IP: $PUBLIC_IP"
+          echo "BASTION_IP=$PUBLIC_IP" >> $GITHUB_ENV
+
+      # Bastion에 kubectl 설치
+      - name: 'Install kubectl on Bastion'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << "EOF"
+            curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+            exit
+          EOF
+      
+      # Bastion에 tfenv 설치
+      - name: 'Install terrafrom on Bastion & clone tf file from git'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            sudo yum install -y git unzip
+            git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+            echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bash_profile
+            source ~/.bash_profile
+            tfenv install 1.9.5
+            tfenv use 1.9.5
+            git clone --no-checkout https://github.com/bhnd38/Terraform-MR.git
+            cd Terraform-MR
+            git config core.sparseCheckout true
+            echo "terraform/bastion" >> .git/info/sparse-checkout
+            git checkout main
+            exit
+          EOF
+
+
+      # Kubeconfig 파일 업데이트하기
+      - name: 'Configure kubeconfig'
+        run: |
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            aws eks update-kubeconfig --region us-east-2 --name allcle-cluster
+            exit
+          EOF
+      
+      # Bastion 내부에서 terraform 실행하여 alb controller와 ingress 생성
+      - name: 'Execute Terraform on Bastion for ALB Controller and Ingress'
+        run: |
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            cd ~/Terraform-MR/terraform/bastion
+            terraform init
+            terraform apply -auto-approve
+            exit
+          EOF

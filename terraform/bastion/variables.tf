@@ -35,6 +35,12 @@ variable "region" {
   default     = "us-east-2"
 }
 
+variable "bastion_ami_id" {
+  description = "custom ami id for Bastion Instance Ohio region"
+  type = string
+  default = "ami-0ea5444b8b9f65b29"
+}
+
 variable "instance_type" {
   description = "EKS instance type"
   type        = string
