@@ -119,7 +119,7 @@ jobs:
             git config --global user.name "Song9809"
             git config --global user.email "syhsong9809@gmail.com"
             git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-us.git
-            echo "#Test 입니다" >> allcle-eks-us/.helmignore
+            echo "#Test 입니다2" >> allcle-eks-us/.helmignore
             cd allcle-eks-us
             git add .
             git commit -m "Multi Region Testing" || echo "No changes to commit"
