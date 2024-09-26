@@ -41,6 +41,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml
+            kubectl delete svc argocd-server -n argocd
             cd ~/Terraform-MR/terraform/bastion
             terraform init
             terraform destroy -auto-approve
