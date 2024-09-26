@@ -1,27 +1,3 @@
-# data "aws_ecr_repository" "nginx_k8s" {
-#     name = "nginx-k8s"
-# }
-
-# data "aws_ecr_repository" "flask_k8s" {
-#     name = "flask-k8s"
-# }
-
-# data "aws_ecr_repository" "pre_nginx" {
-#     name = "pre-nginx"
-# }
-
-# data "aws_ecr_repository" "pre_flask" {
-#     name = "pre-flask"
-# }
-
-# data "aws_ecr_repository" "home_nginx" {
-#     name = "home-nginx"
-# }
-
-# data "aws_ecr_repository" "home_flask" {
-#     name = "home-flask"
-# }
-
 data "kubernetes_service" "argocd_server" {
     metadata {
         name = "argocd-server"
