@@ -119,26 +119,19 @@ jobs:
             git config --global user.name "Song9809"
             git config --global user.email "syhsong9809@gmail.com"
             git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-us.git
-            echo "#Test 입니다2" >> allcle-eks-us/.helmignore
+            git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-pre-us.git
+            echo "#Test 입니다1" >> allcle-eks-us/.helmignore
+            echo "#Test 입니다 pre1" >> ~/allcle-eks-pre-us/.helmignore
             cd allcle-eks-us
             git add .
             git commit -m "Multi Region Testing" || echo "No changes to commit"
             git push origin main || echo "Failed to push changes"
+            cd allcle-eks-pre-us
+            git add .
+            git commit -m "Multi Region Testing" || echo "No changes to commit"
             exit
           EOF
       
-      # Bastion에서 AWS Secrets Manager의 GIT_TOKEN 값 받아오기 (allcle-eks-pre-us.git)
-      - name: 'git clone to allcle-eks-pre-us.git'
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-pre-us.git
-            echo "#Test 입니다 pre1" >> ~/allcle-eks-pre-us/.helmignore
-            cd ~/allcle-eks-pre-us
-            git add .
-            git commit -m "Multi Region Testing" || echo "No changes to commit"
-            git push origin main || echo "Failed to push changes"
-            exit
-          EOF
 
 
       # Kubeconfig 파일 업데이트하기
