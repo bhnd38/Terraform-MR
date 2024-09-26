@@ -9,6 +9,7 @@ data "kubernetes_service" "argocd_server" {
 resource "null_resource" "login_argocd_server" {
     provisioner "local-exec" {
         command = <<EOT
+            sleep 30
             ARGOCD_SERVER=$(kubectl -n argocd get svc argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
             argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_PASSWORD --insecure

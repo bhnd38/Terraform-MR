@@ -166,6 +166,7 @@ jobs:
             curl -sSL https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 -o argocd
             chmod +x argocd
             sudo mv argocd /usr/local/bin/
+            sleep 30
             exit
           EOF
 

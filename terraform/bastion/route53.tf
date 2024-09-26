@@ -76,13 +76,21 @@ resource "aws_route53_record" "pre_allcle_failover" {
   depends_on = [ data.aws_lb.allcle_alb_ohio ]
 }
 
+# K8s Ingress 프로비저닝 대기하기
+resource "null_resource" "wait_before_ingress" {
+    provisioner "local-exec" {
+        command = "sleep 30"  # 30초 대기
+    }
+    depends_on = [ kubernetes_ingress_v1.allcle_ingress ]
+}
+
 # 생성되어있는 k8s ingress 데이터 가져오기
 data "kubernetes_ingress_v1" "allcle_ingress" {
   metadata {
     name = "allcle-ingress"
     namespace = "default"
   }
-  depends_on = [ kubernetes_ingress_v1.allcle_ingress ]
+  depends_on = [ null_resource.wait_before_ingress ]
 }
 
 locals {
