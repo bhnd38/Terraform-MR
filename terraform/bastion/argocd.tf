@@ -23,62 +23,71 @@ data "aws_ecr_repository" "home_flask" {
 }
 
 # argocd 네임스페이스 생성
-resource "kubernetes_namespace" "argocd" {
-    metadata {
-        name = "argocd"
-    }
-    depends_on = [ helm_release.alb_controller ]
-}
+# resource "kubernetes_namespace" "argocd" {
+#     metadata {
+#         name = "argocd"
+#     }
+#     depends_on = [ helm_release.alb_controller ]
+# }
 
 # argocd 설치
-resource "helm_release" "argocd" {
-    name = "argocd"
-    repository = "https://argoproj.github.io/argo-helm"
-    chart = "argo-cd"
-    namespace = kubernetes_namespace.argocd.metadata[0].name
-    version = "2.12.3"
+# resource "helm_release" "argocd" {
+#     name = "argocd"
+#     repository = "https://argoproj.github.io/argo-helm"
+#     chart = "argo-cd"
+#     namespace = kubernetes_namespace.argocd.metadata[0].name
+#     version = "2.12.3"
 
-    set {
-        name = "server.service.type"
-        value = "LoadBalancer" # 외부 접근을 위해 LoadBalancer 서비스 타입 설정
+#     set {
+#         name = "server.service.type"
+#         value = "LoadBalancer" # 외부 접근을 위해 LoadBalancer 서비스 타입 설정
+#     }
+
+#     set {
+#         name = "crds.install"
+#         value = "true"
+#     }
+
+#     values = [
+#         file("~/${var.allcle_eks_us_repo}/values.yaml")
+#     ]
+#     depends_on = [ kubernetes_namespace.argocd ]
+# }
+
+data "kubernetes_service" "argocd_server" {
+    metadata {
+        name = "argocd-server"
+        namespace = "argocd"
     }
-
-    set {
-        name = "crds.install"
-        value = "true"
-    }
-
-    values = [
-        file("~/${var.allcle_eks_us_repo}/values.yaml")
-    ]
-    depends_on = [ kubernetes_namespace.argocd ]
 }
 
 # argocd 서비스 타입을 LoadBalancer로 변경
 # resource "kubernetes_service" "argocd_server" {
 #     metadata {
-#         name = "argocd-server"
-#         namespace = kubernetes_namespace.argocd.metadata[0].name
+#         name = data.kubernetes_service.argocd_server.metadata[0].name
+#         namespace = data.kubernetes_service.argocd_server.metadata[0].namespace
+#         labels = data.kubernetes_service.argocd_server.metadata[0].labels
 #     }
 
 #     spec {
 #         type = "LoadBalancer"
-
-#         selector = {
-#             "app.kubernetes.io/name" = "argocd-server"
-#         }
-
+#         selector = data.kubernetes_service.argocd_server.spec[0].selector
+        
 #         port {
+#             name = "http"
 #             port = 80
 #             target_port = 8080
 #         }
 
 #         port {
+#             name = "https"
 #             port = 443
 #             target_port = 8080
 #         }
 #     }
-#     depends_on = [ helm_release.argocd ]
+
+        
+#     depends_on = [ data.kubernetes_service.argocd_server ]
 # }
 
 # argocd server URL 출력
@@ -90,72 +99,23 @@ resource "helm_release" "argocd" {
 resource "null_resource" "login_argocd_server" {
     provisioner "local-exec" {
         command = <<EOT
-            ARGOCD_SERVER=$(kubeectl -n argocd get svc argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            ARGOCD_SERVER=$(kubectl -n argocd get svc argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
             argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_PASSWORD --insecure
         EOT
     }
-    depends_on = [ helm_release.argocd ]
+    depends_on = [ data.kubernetes_service.argocd_server ]
 }
 
 
-# # helm 설치 스크립트 다운로드 및 실행
-resource "null_resource" "install_helm" {
-    provisioner "local-exec" {
-        command = <<EOT
-            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-            chmod 700 get_helm.sh
-            ./get_helm.sh
-        EOT
-    }
-}
-
-# # helm 차트 생성
-# resource "null_resource" "create_helm_chart" {
-#     provisioner "local-exec" {
-#         command = "helm create allcle-helm"
-#     }
-# }
-
-# argocd CRDS 설치
-# resource "kubernetes_manifest" "argocd_crds" {
-#     manifest = {
-#         apiVersion = "apiextensions.k8s.io/v1"
-#         kind = "CustomResourceDefinition"
-#         metadata = {
-#             name = "applications.argoproj.io"
-#         }
-#         spec = {
-#             group = "argoproj.io"
-#             names = {
-#                 kind = "Application"
-#                 listKind = "ApplicationList"
-#                 plural = "applications"
-#                 shortNames = ["app"]
-#                 singular = "application"
-#             }
-#             scope = "Namespaced"
-#             versions = [{
-#                 name = "v1alpha1"
-#                 served = true
-#                 storage = true
-#             }]
-#         }
-#     }
-# }
-
-resource "time_sleep" "wait_for_crds" {
-    create_duration = "20s"
-    depends_on = [ helm_release.argocd, null_resource.install_helm ]
-}
-
+# argocd의 allcle-eks-us 애플리케이션과 연동
 resource "kubernetes_manifest" "argocd_app_sync_allcle" {
     manifest = {
         apiVersion = "argoproj.io/v1alpha1"
         kind = "Application"
         metadata = {
             name = "allcle-sync"
-            namespace = kubernetes_namespace.argocd.metadata[0].name
+            namespace = data.kubernetes_service.argocd_server.metadata[0].namespace
         }
         spec = {
             project = "default"
@@ -176,20 +136,18 @@ resource "kubernetes_manifest" "argocd_app_sync_allcle" {
             }
         }
     }
-    depends_on = [
-        helm_release.argocd,
-        null_resource.login_argocd_server,
-        time_sleep.wait_for_crds
-    ]
+    depends_on = [ null_resource.login_argocd_server ]
 }
 
+
+# argocd의 allcle-eks-pre-us 애플리케이션과 연동
 resource "kubernetes_manifest" "argocd_app_sync_allcle_pre" {
     manifest = {
         apiVersion = "argoproj.io/v1alpha1"
         kind = "Application"
         metadata = {
             name = "allcle-pre-sync"
-            namespace = kubernetes_namespace.argocd.metadata[0].name
+            namespace = data.kubernetes_service.argocd_server.metadata[0].namespace
         }
         spec = {
             project = "default"
@@ -210,5 +168,5 @@ resource "kubernetes_manifest" "argocd_app_sync_allcle_pre" {
             }
         }
     }
-    depends_on = [ helm_release.argocd, null_resource.login_argocd_server ]
+    depends_on = [ null_resource.login_argocd_server ]
 }

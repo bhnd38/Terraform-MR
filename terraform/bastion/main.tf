@@ -222,6 +222,15 @@ resource "kubernetes_ingress_v1" "allcle-ingress" {
   #depends_on = [ helm_release.alb_controller ]  
 }
 
+locals {
+  ohio_alb_dns_name = kubernetes_ingress_v1.allcle-ingress.status[0].load_balancer[0].ingress[0].hostname
+}
+
+output "ohio_alb_dns_name" {
+  description = "Ohio Region ALB DNS Name"
+  value = local.ohio_alb_dns_name
+}
+
 # ALB 데이터 가져오기
 # data "aws_lb" "alb" {
 #   name = a

@@ -110,7 +110,7 @@ jobs:
             exit
           EOF
       
-      # Bastion에서 AWS Secrets Manager의 GIT_TOKEN 값 받아오기
+      # Bastion에서 AWS Secrets Manager의 GIT_TOKEN 값 받아오기 (allcle-eks-us.git)
       - name: 'Install terraform on Bastion & clone tf file from git'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
@@ -121,6 +121,19 @@ jobs:
             git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-us.git
             echo "#Test 입니다2" >> allcle-eks-us/.helmignore
             cd allcle-eks-us
+            git add .
+            git commit -m "Multi Region Testing" || echo "No changes to commit"
+            git push origin main || echo "Failed to push changes"
+            exit
+          EOF
+      
+      # Bastion에서 AWS Secrets Manager의 GIT_TOKEN 값 받아오기 (allcle-eks-pre-us.git)
+      - name: 'git clone to allcle-eks-pre-us.git'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-pre-us.git
+            echo "#Test 입니다 pre1" >> ~/allcle-eks-pre-us/.helmignore
+            cd ~/allcle-eks-pre-us
             git add .
             git commit -m "Multi Region Testing" || echo "No changes to commit"
             git push origin main || echo "Failed to push changes"
@@ -137,15 +150,32 @@ jobs:
           EOF
       
       # Bastion에 Helm 설치
-      - name: 'Install HELM on Bastion'
+      - name: 'Install HELM & ArgoCD on Bastion'
         run: |
           ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
             chmod 700 get_helm.sh
             ./get_helm.sh
+            helm package ~/allcle-eks-us/
+            helm package ~/allcle-eks-pre-us/
+            helm install allcle-eks-us-helm ~/allcle-eks-us/
+            helm install allcle-eks-pre-us-helm ~/allcle-eks-pre-us/
             exit
           EOF
       
+      # Bastion에 ArgoCD CLI, Argocd-server 생성
+      - name: 'Install ArgoCD CLI * Argocd Server on Bastion'
+        run: |
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            kubectl create namespace argocd
+            kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml           
+            kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+            curl -sSL https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 -o argocd
+            chmod +x argocd
+            sudo mv argocd /usr/local/bin/
+            exit
+          EOF
+
       # Bastion 내부에서 terraform 실행하여 alb controller와 ingress 생성
       - name: 'Execute Terraform on Bastion for ALB Controller and Ingress'
         run: |

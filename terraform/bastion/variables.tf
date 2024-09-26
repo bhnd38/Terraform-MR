@@ -117,3 +117,15 @@ variable "allcle_on_us_repo" {
   type = string
   default = "allcle-on-us"
 }
+
+variable "seoul_alb_dns" {
+  description = "Seoul Region ALB DNS Address"
+  type = string
+  default = "k8s-default-allclein-968f5c5995-1490216131.ap-northeast-2.elb.amazonaws.com"
+}
+
+variable "seoul_alb_host_zone_id" {
+  description = "Seoul Region ALB's Hosting Zone ID"
+  type = string
+  default = "ZWKZPGTI48KDX"
+}
