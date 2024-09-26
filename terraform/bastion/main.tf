@@ -217,11 +217,11 @@ resource "kubernetes_ingress_v1" "allcle-ingress" {
   } 
 }
 
-output "ohio_alb_dns_name" {
-  description = "Ohio Region ALB DNS Name"
-  value = kubernetes_ingress_v1.allcle-ingress.status[0].load_balancer[0].ingress[0].hostname
-}
+# output "ohio_alb_dns_name" {
+#   description = "Ohio Region ALB DNS Name"
+#   value = kubernetes_ingress_v1.allcle-ingress.status[0].load_balancer[0].ingress[0].hostname
+# }
 
-output "ohio_alb_zone_id" {
-  value = kubernetes_ingress_v1.allcle-ingress.status[0].load_balancer[0].ingress[0].zone_id
-}
+# output "ohio_alb_zone_id" {
+#   value = kubernetes_ingress_v1.allcle-ingress.status[0].load_balancer[0].ingress[0].zone_id
+# }
