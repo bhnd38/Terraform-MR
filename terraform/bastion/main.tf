@@ -163,7 +163,7 @@ resource "helm_release" "alb_controller" {
 }
 
 
-resource "kubernetes_ingress_v1" "allcle-ingress" {
+resource "kubernetes_ingress_v1" "allcle_ingress" {
   metadata {
     name = var.eks_ingress_name
     annotations = {

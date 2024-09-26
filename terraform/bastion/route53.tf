@@ -54,6 +54,7 @@ resource "aws_route53_record" "www_allcle_failover" {
 
 #---------------------------------------------------------------------------------------------------------
 
+
 # www.pre.allcle.net 레코드에 오하이오 리전 ALB를 장애 조치 Secondary로 추가하기
 resource "aws_route53_record" "pre_allcle_failover" {
   zone_id = data.aws_route53_zone.allcle_zone.zone_id  # 서울 리전 Route 53 호스팅 존 ID
@@ -81,6 +82,7 @@ data "kubernetes_ingress_v1" "allcle_ingress" {
     name = "allcle-ingress"
     namespace = "default"
   }
+  depends_on = [ kubernetes_ingress_v1.allcle_ingress ]
 }
 
 locals {
