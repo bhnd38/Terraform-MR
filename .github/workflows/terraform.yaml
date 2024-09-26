@@ -77,6 +77,10 @@ jobs:
           PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name, Values=bastion" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
           echo "Bastion Public IP: $PUBLIC_IP"
           echo "BASTION_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      
+      # Bastion Instance 실행 시간 대기
+      - name: 'Wait for 10 seconds'
+        run: sleep 10
 
       # Bastion에 kubectl 설치
       - name: 'Install kubectl on Bastion'
@@ -89,10 +93,10 @@ jobs:
           EOF
       
       # Bastion에 tfenv 설치
-      - name: 'Install terrafrom on Bastion & clone tf file from git'
+      - name: 'Install terraform on Bastion & clone tf file from git'
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
-            sudo yum install -y git unzip
+            sudo yum install -y git-all unzip
             git clone https://github.com/tfutils/tfenv.git ~/.tfenv
             echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bash_profile
             source ~/.bash_profile
@@ -106,37 +110,28 @@ jobs:
             exit
           EOF
       
-      # # AWS credentials 값 txt파일로 만들기
-      # - name: 'Create script with AWS Credentials'
-      #   run: |
-      #     echo "${{ secrets.AWS_ACCESS_KEY_ID }}" >> aws-creds.txt
-      #     echo "${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> aws-creds.txt
-      #     echo "${{ env.AWS_REGION }}" >> aws-creds.txt
-      #     chmod 600 aws-creds.txt
+      # Bastion에서 AWS Secrets Manager의 GIT_TOKEN 값 받아오기 (allcle-eks-us.git)
+      - name: 'Install terraform on Bastion & clone tf file from git'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            TOKEN=$(aws secretsmanager get-secret-value --secret-id GITHUB_TOKEN --query 'SecretString' --output text)
+            GITHUB_TOKEN=$(echo $TOKEN | jq -r '.GITHUB_TOKEN')
+            git config --global user.name "Song9809"
+            git config --global user.email "syhsong9809@gmail.com"
+            git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-us.git
+            git clone https://Song9809:${GITHUB_TOKEN}@github.com/flaskgosu/allcle-eks-pre-us.git
+            echo "#Test 입니다1" >> allcle-eks-us/.helmignore
+            echo "#Test 입니다 pre1" >> ~/allcle-eks-pre-us/.helmignore
+            cd allcle-eks-us
+            git add .
+            git commit -m "Multi Region Testing" || echo "No changes to commit"
+            git push origin main || echo "Failed to push changes"
+            cd allcle-eks-pre-us
+            git add .
+            git commit -m "Multi Region Testing" || echo "No changes to commit"
+            exit
+          EOF
       
-      # # SCP로 Bastion에 파일 전송
-      # - name: "Transfer AWS credentials to Bastion"
-      #   run: |
-      #     scp -i ~/FPT2-key.pem -o StrictHostKeyChecking=no aws-creds.txt ec2-user@${{ env.BASTION_IP }}:~/aws-creds.txt
-      
-      # # Bastion 접속 후 aws-creds.txt 파일로 aws cli 구성
-      # - name: 'Configure AWS on Bastion'
-      #   run: |
-      #     ssh -i ~/FPT2-key.pem -o StrictHostKeyChecking=no ec2-user@${{ env.BASTION_IP }} << 'EOF'
-      #       export AWS_ACCESS_KEY_ID=$(sed -n '1p' ~/aws-creds.txt)
-      #       export AWS_SECRET_ACCESS_KEY=$(sed -n '2p' ~/aws-creds.txt)
-      #       export AWS_REGION=$(sed -n '3p' ~/aws-creds.txt)
-      #       aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-      #       aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-      #       aws configure set region $AWS_REGION
-      #       rm -rf ~/aws-creds.txt
-      #       exit
-      #     EOF
-      
-      # # Runner에 저장된 aws-creds.txt 파일 삭제
-      # - name: 'Delete aws-creds.txt'
-      #   run: |
-      #     rm -rf aws-creds.txt
 
 
       # Kubeconfig 파일 업데이트하기
@@ -147,6 +142,33 @@ jobs:
             exit
           EOF
       
+      # Bastion에 Helm 설치
+      - name: 'Install HELM & ArgoCD on Bastion'
+        run: |
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
+            helm package ~/allcle-eks-us/
+            helm package ~/allcle-eks-pre-us/
+            helm install allcle-eks-us-helm ~/allcle-eks-us/
+            helm install allcle-eks-pre-us-helm ~/allcle-eks-pre-us/
+            exit
+          EOF
+      
+      # Bastion에 ArgoCD CLI, Argocd-server 생성
+      - name: 'Install ArgoCD CLI * Argocd Server on Bastion'
+        run: |
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            kubectl create namespace argocd
+            kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml           
+            kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+            curl -sSL https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 -o argocd
+            chmod +x argocd
+            sudo mv argocd /usr/local/bin/
+            exit
+          EOF
+
       # Bastion 내부에서 terraform 실행하여 alb controller와 ingress 생성
       - name: 'Execute Terraform on Bastion for ALB Controller and Ingress'
         run: |
