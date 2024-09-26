@@ -136,6 +136,16 @@ jobs:
             exit
           EOF
       
+      # Bastion에 Helm 설치
+      - name: 'Install HELM on Bastion'
+        run: |
+          ssh -i ~/FPT2-key.pem ec2-user@${{ env.BASTION_IP }} << 'EOF'
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
+            exit
+          EOF
+      
       # Bastion 내부에서 terraform 실행하여 alb controller와 ingress 생성
       - name: 'Execute Terraform on Bastion for ALB Controller and Ingress'
         run: |
