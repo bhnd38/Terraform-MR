@@ -94,7 +94,7 @@ data "kubernetes_ingress_v1" "allcle_ingress" {
 }
 
 locals {
-  alb_dns_name = data.kubernetes_ingress_v1.allcle_ingress.status[0].load_balancer[0].ingress[0].hostname
+  alb_dns_name = data.kubernetes_ingress_v1.allcle_ingress.status[0].loadBalancer[0].ingress[0].hostname
 
   # ALB DNS 이름을 '.'으로 분리하여 마지막 부분을 제거합니다.
   base_dns_parts = split(".", local.alb_dns_name)
