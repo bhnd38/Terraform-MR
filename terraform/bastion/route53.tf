@@ -76,10 +76,29 @@ resource "aws_route53_record" "pre_allcle_failover" {
   depends_on = [ data.aws_lb.allcle_alb_ohio ]
 }
 
-# K8s Ingress 프로비저닝 대기하기
+# K8s Ingress 프로비저닝 대기하기 (최대 100초)
+# resource "null_resource" "wait_before_ingress" {
+#     provisioner "local-exec" {
+#         command = "sleep 30"  # 30초 대기
+#     }
+#     depends_on = [ kubernetes_ingress_v1.allcle_ingress ]
+# }
+
 resource "null_resource" "wait_before_ingress" {
     provisioner "local-exec" {
-        command = "sleep 30"  # 30초 대기
+        command = <<EOT
+          for i in {1..10}; do
+            if kubectl get ingress allcle-ingress -n default -o json | jq '.status.loadBalancer.ingress' | grep hostname; then
+              echo "Ingress ready"
+              exit 0
+            else
+              echo "Waiting for Ingress to be ready..."
+              sleep 10
+            fi
+          done
+          echo "Ingress not ready after 100 seconds"
+          exit 1
+        EOT
     }
     depends_on = [ kubernetes_ingress_v1.allcle_ingress ]
 }

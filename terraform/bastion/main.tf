@@ -164,6 +164,7 @@ resource "helm_release" "alb_controller" {
 
 
 resource "kubernetes_ingress_v1" "allcle_ingress" {
+  wait_for_load_balancer = true
   metadata {
     name = var.eks_ingress_name
     annotations = {
