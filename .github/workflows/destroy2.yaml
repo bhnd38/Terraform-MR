@@ -54,7 +54,9 @@ jobs:
 
       # Terraform 초기화 
       - name: Terraform init
-        run: terraform init
+        run: |
+          terraform init
+          terraform refresh
         working-directory: ./terraform/local
       
       # # Terraform state에서 iam role 제거
